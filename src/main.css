@@ -9,3 +9,61 @@ body {
   width:  100vw;
   height: 100vh;
 }
+
+  /* 階層パネル */
+  #object-hierarchy {
+      max-height: calc(100vh - 8rem);
+      overflow: auto;
+      padding: 0.5rem 1rem;
+      background-color: rgba(255, 255, 255, 0.85);
+      border-radius: 6px;
+      font-family: sans-serif;
+      font-size: 14px;
+  }
+
+  /* 子要素のない行は三角マーク分だけずらして揃える */
+  #object-hierarchy .leaf {
+      padding-left: 1em;
+  }
+
+/* キーコントロール */
+.key-control {
+    position: absolute;
+    z-index: 10;
+    bottom: 50px;
+    left: 30px;
+    width: 140px;
+    height: 140px;
+    transition: all 0.3s;
+    pointer-events: none;
+}
+
+/* 各キーのスタイル */
+.key-control > .key-item {
+    transition: all 0.15s;
+    z-index: 20;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    --d: 50px;
+    --angle: calc(360deg / 4 * var(--index));
+    --x: calc(cos(var(--angle)) * var(--d));
+    --y: calc(sin(var(--angle)) * var(--d));
+    translate: calc(var(--x) - 50%) calc(var(--y) - 50%);
+    user-select: none;
+    color: #ffffff;
+    background-color: #2b2b2b;
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+/* キーが押された時のスタイル　*/
+.key-control > .active {
+    background-color: #24fff4;
+    filter: drop-shadow(0 0 5px #24fff4);
+}

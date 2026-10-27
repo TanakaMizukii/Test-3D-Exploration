@@ -9,7 +9,7 @@ const scene = new THREE.Scene();
 
 // カメラの作成
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1,100000);
-camera.position.set(10, 10, 10);
+camera.position.set(20, 20, 100);
 scene.add(camera);
 
 // キャンバスの設定
@@ -28,7 +28,7 @@ zoomControls.noRotate  = true;
 zoomControls.zoomSpeed = 0.2;
 
 // ライト
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight(0xffffff);
 scene.add(ambientLight);
 
 const renderer = new THREE.WebGLRenderer({
@@ -39,6 +39,7 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setAnimationLoop(animate);
+
 
 // アニメーション
 function animate() {
@@ -66,25 +67,113 @@ function onResize() {
 onResize()
 window.addEventListener('resize', onResize);
 
-const addModel = (url: string) => {
+const objs: {
+  [key: string]: THREE.Object3D;
+} = {};
+
+const addStructureModel = (url: string, name: string) => {
+  new GLTFLoader().load(url, function (gltf) {
+    const model = gltf.scene;
+    objs[name] = model;
+
+    scene.add(model);
+
+    // 階層の要素への書き出し
+    const hierarcyPanel = document.getElementById('object-hierarchy');
+    if (!hierarcyPanel) return;
+    // hierarcyPanel.replaceChild();
+    createHierarhyUI(model, hierarcyPanel);
+
+    function createHierarhyUI(object: THREE.Object3D, container: HTMLElement) {
+      // 子要素を持つものは <details> で折りたたみ可能にする
+      const hasChildren = object.children.length > 0;
+      const item = document.createElement(hasChildren ? 'details' : 'div');
+      // 行のヘッダー部分（details の場合は summary がクリックで開閉する）
+      const header = document.createElement(hasChildren ? 'summary' : 'div');
+      if (!hasChildren) header.className = 'leaf';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = object.visible;
+
+      // チェックボックスで表示・非表示を切り替え
+      checkbox.addEventListener('change', () => {
+          object.visible = checkbox.checked;
+      });
+
+      const name = document.createElement('span');
+      name.textContent = `${object.name || '名前なし'} (${object.type})`;
+
+      header.append(checkbox, name);
+      item.appendChild(header);
+
+      if (hasChildren) {
+          // この階層は少し右にずらして表示
+          const childContainer = document.createElement('div');
+          childContainer.style.marginLeft = '1.5rem';
+          for (const child of object.children) {
+              createHierarhyUI(child, childContainer);
+          }
+          item.appendChild(childContainer);
+      }
+
+      container.appendChild(item);
+    }
+  })
+};
+
+// キャラクターのマテリアル
+const characterMaterial = new THREE.MeshBasicMaterial({
+  color:   new THREE.Color('rgb(220, 220, 220)'),
+  opacity: 0.5,
+  transparent: true,
+});
+
+// レイキャスト
+const raycaster = new THREE.Raycaster();
+
+// 下向きベクトル
+const downDirection = new THREE.Vector3(0, -1, 0);
+
+const addCharacterModel = (url: string) => {
   new GLTFLoader().load(url, function (gltf) {
     const model = gltf.scene;
     model.traverse((object: any) => {
       if (object.isMesh) {
         object.material.needUpdate = true;
-        // object.material = characterMaterial;
+        object.material = characterMaterial;
       }
     });
-    model.scale.set(1, 1, 1);
-    scene.add(model);
-    })
-};
+    // 大体人間の大きさに合わせる
+    model.scale.set(0.9, 0.9, 0.9);
+
+    model.position.set(0, 100, 0);
+
+    // シーン内の床のオブジェクトを取得
+    const ground = objs.FloorSurface;
+
+    if (ground) {
+      // レイキャストの設定
+      raycaster.set(model.position, downDirection);
+      const intersects = raycaster.intersectObject(ground, true);
+
+      if (intersects.length > 0) {
+        model.position.y = intersects[0].point.y;
+      }
+    }
+  });
+}
 
 // オブジェクトを読み込み
 const loadObjs = async () => {
-    // モデルを読み込み
-    addModel('models/MatumotoCivicArtsCenter_04.glb');
-    addModel('models/Xbot.glb');
+  const initialPromises = [
+    addStructureModel('models/MatumotoCivicArtsCenter_04.glb', 'FloorSurface'),
+  ];
+
+  // FloorSurface を読み込み
+  await Promise.all(initialPromises);
+  // モデルを読み込み
+  addCharacterModel('models/Xbot.glb');
 };
 
 // 読み込み開始
