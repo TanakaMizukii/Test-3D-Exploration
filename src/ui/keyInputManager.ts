@@ -1,4 +1,3 @@
-import { element } from "three/tsl";
 
 // 矢印キーとWASDキーの対応表
 const keyDict: Record<string, string> = {
@@ -28,7 +27,7 @@ export class KeyInputManager {
     // イベントリスナー登録
     private addEventListeners(): void {
         window.addEventListener('keydown', this.handleKeyDown.bind(this));
-        window.addEventListener('keyup', this.handleKeyUp.bind(this));
+        window.addEventListener('keyup',   this.handleKeyUp.bind(this));
     }
 
     // キー押下時の処理

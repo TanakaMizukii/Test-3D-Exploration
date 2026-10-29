@@ -46,7 +46,7 @@ body {
     top: 50%;
     left: 50%;
     --d: 50px;
-    --angle: calc(360deg / 4 * var(--index));
+    --angle: calc((-360deg / 4 * var(--index)));
     --x: calc(cos(var(--angle)) * var(--d));
     --y: calc(sin(var(--angle)) * var(--d));
     translate: calc(var(--x) - 50%) calc(var(--y) - 50%);

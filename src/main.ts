@@ -19,8 +19,8 @@ const context = canvas.getContext('webgl2') as WebGL2RenderingContext;
 // コントロール
 const orbitControls = new OrbitControls(camera, canvas);
 orbitControls.enableDamping = true;
-orbitControls.enablePan = false;
-orbitControls.enableZoom = false;
+orbitControls.enablePan     = true;
+orbitControls.enableZoom    = false;
 
 const zoomControls = new TrackballControls(camera, canvas);
 zoomControls.noPan     = true;
