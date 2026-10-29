@@ -4,6 +4,9 @@ import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/Addons.js';
 
+import { JoystickControl } from './ui/joystickControl';
+
+
 // シーンの作成
 const scene = new THREE.Scene();
 
@@ -40,17 +43,6 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setAnimationLoop(animate);
 
-
-// アニメーション
-function animate() {
-  const target = orbitControls.target;
-  orbitControls.update();
-  zoomControls.target.set(target.x, target.y, target.z);
-  zoomControls.update();
-
-  renderer.render(scene, camera);
-};
-animate();
 
 // 画面リサイズ時にキャンバスもリサイズ
 function onResize() {
@@ -178,3 +170,17 @@ const loadObjs = async () => {
 
 // 読み込み開始
 loadObjs();
+
+// ジョイスティックコントロールの設定
+const joystick = new JoystickControl('joystick-ball');
+
+// アニメーション
+function animate() {
+  const target = orbitControls.target;
+  orbitControls.update();
+  zoomControls.target.set(target.x, target.y, target.z);
+  zoomControls.update();
+
+  renderer.render(scene, camera);
+};
+animate();
