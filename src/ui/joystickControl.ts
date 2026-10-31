@@ -76,10 +76,8 @@ export class JoystickControl {
 
     // ジョイスティックの位置を更新
     private updateJoystickBall(): void {
-        let keyX: number = 0;
-        let keyY: number = 0;
-
         // X方向の判定
+        let keyX: number = 0;
         if (this.keyManager.isKeyPressed('a')) {
             // Aキーが押されていたら左へ
             keyX = -this.joystickLimit;
@@ -89,6 +87,7 @@ export class JoystickControl {
         }
 
         // Y方向の判定
+        let keyY: number = 0;
         if (this.keyManager.isKeyPressed('w')) {
             // Wキーが押されていたら上へ
             keyY = this.joystickLimit;
@@ -114,10 +113,8 @@ export class JoystickControl {
 
     // ジョイスティックの方向を取得
     public getDirection(): { x: number; y: number } {
-        let keyX: number = 0;
-        let keyY: number = 0;
-
         // X方向の判定
+        let keyX: number = 0;
         if (this.keyManager.isKeyPressed('a')) {
             // Aキーが押されていたら左へ
             keyX = -this.joystickLimit;
@@ -127,12 +124,13 @@ export class JoystickControl {
         }
 
         // Y方向の判定
+        let keyY: number = 0;
         if (this.keyManager.isKeyPressed('w')) {
             // Wキーが押されていたら上へ
-            keyY = this.joystickLimit;
+            keyY = -this.joystickLimit;
         } else if (this.keyManager.isKeyPressed('s')) {
             // Sキーが押されていたら下へ
-            keyY = -this.joystickLimit;
+            keyY = this.joystickLimit;
         }
 
         // タッチとキー入力を合算
