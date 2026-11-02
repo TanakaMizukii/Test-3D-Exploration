@@ -13,7 +13,7 @@ const scene = new THREE.Scene();
 
 // カメラの作成
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1,100000);
-camera.position.set(18, 9, 3);
+camera.position.set(0, 0.5, 4);
 scene.add(camera);
 
 // キャンバスの設定
@@ -143,7 +143,8 @@ const addCharacterModel = (url: string) => {
     });
     // 大体人間の大きさに合わせる
     model.scale.set(0.9, 0.9, 0.9);
-    model.position.set(0, 100, 0);
+    model.position.set(0, 0.3, 90);
+    model.rotation.y = Math.PI;
     scene.add(model);
 
     // シーン内の床のオブジェクトを取得
