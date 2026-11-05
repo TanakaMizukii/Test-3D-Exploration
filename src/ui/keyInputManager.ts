@@ -1,4 +1,3 @@
-import { element } from "three/tsl";
 
 // 矢印キーとWASDキーの対応表
 const keyDict: Record<string, string> = {
@@ -28,12 +27,12 @@ export class KeyInputManager {
     // イベントリスナー登録
     private addEventListeners(): void {
         window.addEventListener('keydown', this.handleKeyDown.bind(this));
-        window.addEventListener('keyup', this.handleKeyUp.bind(this));
+        window.addEventListener('keyup',   this.handleKeyUp.bind(this));
     }
 
     // キー押下時の処理
-    private handleKeyDown(e: KeyboardEvent): void {
-        const key = this.normalizeKey(e.key);
+    private handleKeyDown(event: KeyboardEvent): void {
+        const key = this.normalizeKey(event.key);
         if (!key) return;
 
         this.keyState[key] = true;
@@ -41,8 +40,8 @@ export class KeyInputManager {
     }
 
     // キー解放時の処理
-    private handleKeyUp(e: KeyboardEvent): void {
-        const key = this.normalizeKey(e.key);
+    private handleKeyUp(event: KeyboardEvent): void {
+        const key = this.normalizeKey(event.key);
         if (!key) return;
 
         this.keyState[key] = false;
@@ -65,6 +64,6 @@ export class KeyInputManager {
 
     // キーが押されているかチェック
     public isKeyPressed(key: string): boolean {
-        return !!this.keyState[key.toLocaleLowerCase()];
+        return Boolean(this.keyState[key.toLocaleLowerCase()]);
     }
 }

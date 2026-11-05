@@ -4,12 +4,16 @@ import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/Addons.js';
 
+import { JoystickControl } from './ui/joystickControl';
+import { TPSControls } from './ui/tpsControls';
+
+
 // シーンの作成
 const scene = new THREE.Scene();
 
 // カメラの作成
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1,100000);
-camera.position.set(20, 20, 100);
+camera.position.set(0, 0.5, 4);
 scene.add(camera);
 
 // キャンバスの設定
@@ -19,8 +23,8 @@ const context = canvas.getContext('webgl2') as WebGL2RenderingContext;
 // コントロール
 const orbitControls = new OrbitControls(camera, canvas);
 orbitControls.enableDamping = true;
-orbitControls.enablePan = false;
-orbitControls.enableZoom = false;
+orbitControls.enablePan     = true;
+orbitControls.enableZoom    = false;
 
 const zoomControls = new TrackballControls(camera, canvas);
 zoomControls.noPan     = true;
@@ -40,17 +44,6 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setAnimationLoop(animate);
 
-
-// アニメーション
-function animate() {
-  const target = orbitControls.target;
-  orbitControls.update();
-  zoomControls.target.set(target.x, target.y, target.z);
-  zoomControls.update();
-
-  renderer.render(scene, camera);
-};
-animate();
 
 // 画面リサイズ時にキャンバスもリサイズ
 function onResize() {
@@ -74,6 +67,7 @@ const objs: {
 const addStructureModel = (url: string, name: string) => {
   new GLTFLoader().load(url, function (gltf) {
     const model = gltf.scene;
+    model.name = name;
     objs[name] = model;
 
     scene.add(model);
@@ -131,10 +125,13 @@ const characterMaterial = new THREE.MeshBasicMaterial({
 
 // レイキャスト
 const raycaster = new THREE.Raycaster();
-
 // 下向きベクトル
 const downDirection = new THREE.Vector3(0, -1, 0);
 
+// モデルの読み込みとキャラクターコントロールの設定
+let tpsControls: TPSControls;
+
+// キャラクターモデルの追加
 const addCharacterModel = (url: string) => {
   new GLTFLoader().load(url, function (gltf) {
     const model = gltf.scene;
@@ -146,8 +143,9 @@ const addCharacterModel = (url: string) => {
     });
     // 大体人間の大きさに合わせる
     model.scale.set(0.9, 0.9, 0.9);
-
-    model.position.set(0, 100, 0);
+    model.position.set(0, 0.3, 90);
+    model.rotation.y = Math.PI;
+    scene.add(model);
 
     // シーン内の床のオブジェクトを取得
     const ground = objs.FloorSurface;
@@ -161,6 +159,17 @@ const addCharacterModel = (url: string) => {
         model.position.y = intersects[0].point.y;
       }
     }
+
+    // GLTFアニメーションの管理
+    const gltfAnimations: THREE.AnimationClip[] = gltf.animations;
+    const mixer = new THREE.AnimationMixer(model);
+    const animationMap: Map<string, THREE.AnimationAction> = new Map();
+    gltfAnimations.forEach((a: THREE.AnimationClip) => {
+      animationMap.set(a.name, mixer.clipAction(a));
+    });
+
+    // TPSコントロールの初期化
+    tpsControls = new TPSControls(model, mixer, animationMap, orbitControls, zoomControls, camera, 'agree');
   });
 }
 
@@ -178,3 +187,33 @@ const loadObjs = async () => {
 
 // 読み込み開始
 loadObjs();
+
+// 経過時間の管理
+const timer = new THREE.Timer();
+
+// ジョイスティックコントロールの設定
+const joystick = new JoystickControl('joystick-ball');
+
+// アニメーション
+function animate() {
+  const target = orbitControls.target;
+  orbitControls.update();
+  zoomControls.target.set(target.x, target.y, target.z);
+  zoomControls.update();
+
+  timer.update();
+  let mixerUpdateDelta = timer.getDelta();
+  if (tpsControls) {
+    // ユーザーが入力した方向を取得
+    const joystickDirection = joystick.getDirection();
+    // 床のオブジェクトを取得
+    const ground = scene.getObjectByName('FloorSurface')
+    if (ground) {
+        // 床が存在すればキャラクターの位置の更新
+        tpsControls.update(mixerUpdateDelta, joystickDirection, ground as THREE.Mesh);
+    }
+  }
+
+  renderer.render(scene, camera);
+};
+animate();
