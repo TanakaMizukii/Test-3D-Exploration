@@ -5,6 +5,7 @@ import { TrackballControls } from 'three/examples/jsm/Addons.js';
 
 const groundRay = new THREE.Raycaster();  // 地面用のレイキャスター
 const downDirection = new THREE.Vector3(0, -1, 0); // 下方向のベクトル
+const wallRay = new THREE.Raycaster; // 壁用のレイキャスター
 
 export class TPSControls {
     private model: THREE.Group;
@@ -63,6 +64,24 @@ export class TPSControls {
         return this.model.position;
     }
 
+    public checkCollision(mesh: THREE.Mesh, distance: number): boolean {
+        // 現在のモデルの位置を取得
+        const origin = this.model.position.clone();
+        origin.y += 1.0; // 1.0の値は適宜調整
+
+        // モデルの向きを基準にしたレイの方向
+        const direction = this.walkDirection;
+        direction.normalize();
+
+        // レイキャスターの設定
+        wallRay.set(origin, direction);
+        wallRay.far = distance + 0.5; // チェック範囲を設定
+
+        // 衝突判定
+        const intersects = wallRay.intersectObject(mesh, true);
+        return intersects.length > 0; // 衝突があれば true を返す
+    }
+
     // キャラクターの更新処理
     public update(delta: number, joystickDirection: { x: number; y: number}, groundMesh: THREE.Mesh) {
         const directionPressed = joystickDirection.x !== 0 || joystickDirection.y !== 0;
@@ -118,6 +137,10 @@ export class TPSControls {
             // 衝突判定
             const volocity = this.runVelocity;
             const moveDistance = volocity * delta;
+
+            if (this.checkCollision(groundMesh, moveDistance)) {
+                return;
+            }
 
             // モデルの回転を調整
             const moveAngle = Math.atan2(this.walkDirection.x, this.walkDirection.z);

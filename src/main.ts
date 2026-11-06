@@ -3,10 +3,17 @@ import * as THREE from "three";
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/Addons.js';
+import { 	computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
 
 import { JoystickControl } from './ui/joystickControl';
 import { TPSControls } from './ui/tpsControls';
 
+
+// BVHの高速化された例キャストを有効にする
+// BVH機能を追加
+THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 // シーンの作成
 const scene = new THREE.Scene();
@@ -69,6 +76,14 @@ const addStructureModel = (url: string, name: string) => {
     const model = gltf.scene;
     model.name = name;
     objs[name] = model;
+
+    // レイキャストの高速化
+    model.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+            // 各MeshのジオメトリにBVHを構築
+            child.geometry.computeBoundsTree();
+        }
+    });
 
     scene.add(model);
 
